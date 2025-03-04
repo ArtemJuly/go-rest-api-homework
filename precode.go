@@ -48,7 +48,7 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 	task, ok := tasks[id]
 
 	if !ok {
-		http.Error(w, "Не найден Артист", http.StatusNoContent)
+		http.Error(w, "Такой задачи нет", http.StatusBadRequest)
 	}
 
 	resp, err := json.Marshal(task)
@@ -82,12 +82,17 @@ func postTask(w http.ResponseWriter, r *http.Request) {
 	_, err := buf.ReadFrom(r.Body)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	_, ok := tasks[task.ID]
+	if ok {
+		http.Error(w, "Задача уже существует", http.StatusBadRequest)
 		return
 	}
 
@@ -102,7 +107,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 	_, ok := tasks[id]
 
 	if !ok {
-		http.Error(w, "Не найдена задача", http.StatusNoContent)
+		http.Error(w, "Не найдена задача", http.StatusBadRequest)
 	}
 
 	delete(tasks, id)
